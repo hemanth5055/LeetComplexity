@@ -4,7 +4,13 @@
   "version": "1.0",
   "manifest_version": 3,
   "action": {
-    "default_popup": "index.html"
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "curve.png",
+      "32": "curve.png",
+      "48": "curve.png",
+      "128": "curve.png"
+    }
   },
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://leetcode.com/problems/*"],

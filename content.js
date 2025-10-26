@@ -1,5 +1,37 @@
 console.log("Content Script Loaded.");
 
+// Inject Funnel Display font
+const fontLink = document.createElement("link");
+fontLink.href =
+  "https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300;400;500;600;700&display=swap";
+fontLink.rel = "stylesheet";
+document.head.appendChild(fontLink);
+
+// Inject animation styles
+const style = document.createElement("style");
+style.textContent = `
+  @keyframes slideInUp {
+    from {
+      transform: translateY(100px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+document.head.appendChild(style);
+
 const AnalyzeBtn = document.createElement("button");
 AnalyzeBtn.id = "analyze-btn";
 
@@ -49,7 +81,9 @@ async function scrollAndExtractMonacoCode() {
   let unchanged = 0,
     prevSize = 0;
   scroll.scrollTop = 0;
-  await new Promise((res) => setTimeout(res, 200));
+  scroll.scrollTo({ top: 0, behavior: "instant" });
+  void scroll.offsetHeight;
+  await new Promise((res) => setTimeout(res, 500));
 
   for (let i = 0; i < 500; i++) {
     const view = document.querySelector(".view-lines");
@@ -71,10 +105,13 @@ async function scrollAndExtractMonacoCode() {
     if (end && unchanged >= 2) break;
 
     scroll.scrollTop += Math.floor(scroll.clientHeight * 0.6);
-    await new Promise((res) => setTimeout(res, 100));
+    await new Promise((res) => setTimeout(res, 150));
   }
 
   scroll.scrollTop = 0;
+  scroll.scrollTo({ top: 0, behavior: "instant" });
+  void scroll.offsetHeight;
+
   return [...lines.entries()]
     .sort((a, b) => a[0] - b[0])
     .map((e) => e[1])
@@ -90,14 +127,19 @@ function showPopUp() {
     position: "fixed",
     right: "30px",
     bottom: "20px",
-    width: "300px",
-    height: "100px",
-    backgroundColor: isDark ? "#393939ff" : "#f2f2f2",
-    color: isDark ? "#fff" : "#000",
+    width: "340px",
+    minHeight: "140px",
+    backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
+    color: isDark ? "#fff" : "hsl(222.2 84% 4.9%)",
     borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+    border: isDark ? "1px solid #333" : "1px solid hsl(214.3 31.8% 91.4%)",
+    boxShadow: isDark
+      ? "0 8px 24px rgba(0,0,0,0.5)"
+      : "0 8px 24px rgba(0,0,0,0.15)",
     zIndex: "999999",
-    padding: "16px",
+    padding: "20px",
+    fontFamily: "'Funnel Display', sans-serif",
+    animation: "slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
   });
 
   const closeBtn = document.createElement("button");
@@ -106,21 +148,58 @@ function showPopUp() {
     position: "absolute",
     top: "8px",
     right: "12px",
-    fontSize: "22px",
+    fontSize: "24px",
     background: "none",
     border: "none",
     color: "inherit",
     cursor: "pointer",
+    opacity: "0.6",
+    transition: "opacity 0.2s",
+    fontFamily: "inherit",
   });
-  closeBtn.addEventListener("click", () => popup.remove());
+  closeBtn.addEventListener("mouseenter", () => (closeBtn.style.opacity = "1"));
+  closeBtn.addEventListener(
+    "mouseleave",
+    () => (closeBtn.style.opacity = "0.6")
+  );
+  closeBtn.addEventListener("click", () => {
+    popup.style.animation = "fadeOut 0.3s ease-out";
+    setTimeout(() => popup.remove(), 300);
+  });
 
   const content = document.createElement("div");
   content.id = "popup-content";
-  content.innerHTML = "<h3>Analyzing...</h3>";
-  content.style.marginTop = "20px";
+  content.innerHTML = `
+    <h3 style="
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    ">Analyzing...</h3>
+    <p style="
+      font-size: 14px;
+      color: ${isDark ? "#a0a0a0" : "hsl(215.4 16.3% 46.9%)"};
+      margin: 0;
+    ">Please wait while we analyze your code</p>
+  `;
+  content.style.marginTop = "8px";
 
   popup.append(closeBtn, content);
   document.body.appendChild(popup);
+
+  // Add fadeOut animation
+  style.textContent += `
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+    }
+  `;
 }
 
 function updatePopupResult(result) {
@@ -135,17 +214,23 @@ function updatePopupResult(result) {
   try {
     // Handle no result
     if (!result) {
-      content.innerHTML = "<p>❌ Failed to analyze code</p>";
+      content.innerHTML = `
+        <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">❌ Failed</h3>
+        <p style="font-size: 14px; margin: 0;">Failed to analyze code</p>
+      `;
       return;
     }
 
     // Handle API errors
     if (result.error) {
       content.innerHTML = `
-        <p>❌ Error: ${result.error}</p>
+        <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">❌ Error</h3>
+        <p style="font-size: 14px; margin: 0 0 4px 0;">${result.error}</p>
         ${
           result.details
-            ? `<p style="font-size: 12px; color: #666;">${result.details}</p>`
+            ? `<p style="font-size: 12px; color: ${
+                isDark ? "#888" : "hsl(215.4 16.3% 46.9%)"
+              }; margin: 0;">${result.details}</p>`
             : ""
         }
       `;
@@ -154,21 +239,37 @@ function updatePopupResult(result) {
 
     // Handle missing data
     if (!result.timeComplexity && !result.spaceComplexity) {
-      content.innerHTML = "<p>❌ No complexity data available</p>";
+      content.innerHTML = `
+        <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">❌ No Data</h3>
+        <p style="font-size: 14px; margin: 0;">No complexity data available</p>
+      `;
       return;
     }
 
     // Success case
     content.innerHTML = `
-      <p><strong>Time Complexity:</strong> ${
-        result.timeComplexity || "Unknown"
-      }</p>
-      <p><strong>Space Complexity:</strong> ${
-        result.spaceComplexity || "Unknown"
-      }</p>
+      <div style="
+        padding: 10px;
+        border-radius: 8px;
+        animation: fadeIn 0.3s ease-out;
+      ">
+        <p style="margin: 0 0 8px 0; font-size: 16px; line-height: 1.5;">
+          <strong style="font-weight: 600;">Time Complexity:</strong> ${
+            result.timeComplexity || "Unknown"
+          }
+        </p>
+        <p style="margin: 0; font-size: 16px; line-height: 1.5;">
+          <strong style="font-weight: 600;">Space Complexity:</strong> ${
+            result.spaceComplexity || "Unknown"
+          }
+        </p>
+      </div>
     `;
   } catch (err) {
     console.error("Error updating popup:", err);
-    content.innerHTML = `<p>❌ Unexpected error: ${err.message}</p>`;
+    content.innerHTML = `
+      <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">❌ Error</h3>
+      <p style="font-size: 14px; margin: 0;">Unexpected error: ${err.message}</p>
+    `;
   }
 }

@@ -4,53 +4,133 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LeetCode TC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      body {
-        width: 300px;
-        padding: 16px;
-        font-family: Arial, sans-serif;
-      }
-      h3 {
-        margin: 0 0 12px 0;
-      }
-      .api-key-section {
-        margin-bottom: 16px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid #ddd;
-      }
-      input {
-        width: 100%;
-        padding: 8px;
-        margin: 8px 0;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+      * {
+        margin: 0;
+        padding: 0;
         box-sizing: border-box;
       }
+
+      body {
+        width: 340px;
+        padding: 20px;
+        font-family: "Funnel Display", sans-serif;
+        background: hsl(0 0% 100%);
+        color: hsl(222.2 84% 4.9%);
+      }
+
+      h3 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        letter-spacing: -0.02em;
+      }
+
+      .api-key-section {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid hsl(214.3 31.8% 91.4%);
+      }
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: hsl(222.2 84% 4.9%);
+      }
+
+      input {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-family: "Funnel Display", sans-serif;
+        border: 1px solid hsl(214.3 31.8% 91.4%);
+        border-radius: 6px;
+        background: hsl(0 0% 100%);
+        color: hsl(222.2 84% 4.9%);
+        transition: all 0.2s;
+        outline: none;
+      }
+
+      input:focus {
+        border-color: hsl(222.2 47.4% 11.2%);
+        ring: 2px;
+        ring-color: hsl(222.2 84% 4.9% / 0.1);
+      }
+
+      input::placeholder {
+        color: hsl(215.4 16.3% 46.9%);
+      }
+
       button {
         width: 100%;
-        padding: 8px;
-        background: #4caf50;
-        color: white;
+        padding: 10px 16px;
+        margin-top: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: "Funnel Display", sans-serif;
+        background: hsl(222.2 47.4% 11.2%);
+        color: hsl(210 40% 98%);
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         cursor: pointer;
+        transition: background 0.2s;
       }
+
       button:hover {
-        background: #45a049;
+        background: hsl(222.2 47.4% 11.2% / 0.9);
       }
+
+      button:active {
+        transform: scale(0.98);
+      }
+
       .status {
-        font-size: 12px;
-        color: #666;
-        margin-top: 4px;
+        font-size: 13px;
+        margin-top: 8px;
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-weight: 500;
       }
+
       .success {
-        color: #4caf50;
+        color: hsl(142.1 76.2% 36.3%);
+        background: hsl(142.1 76.2% 36.3% / 0.1);
       }
+
       .error {
-        color: #f44336;
+        color: hsl(0 84.2% 60.2%);
+        background: hsl(0 84.2% 60.2% / 0.1);
       }
+
       #popup-content {
-        margin-top: 16px;
+        margin-top: 20px;
+        padding: 16px;
+        background: hsl(210 40% 96.1%);
+        border: 1px solid hsl(214.3 31.8% 91.4%);
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      #popup-content p {
+        margin-bottom: 8px;
+        line-height: 1.5;
+      }
+
+      #popup-content p:last-child {
+        margin-bottom: 0;
+      }
+
+      #popup-content strong {
+        font-weight: 600;
+        color: hsl(222.2 84% 4.9%);
       }
     </style>
   </head>
@@ -58,16 +138,17 @@
     <h3>LeetCode TC</h3>
 
     <div class="api-key-section">
+      <label for="api-key-input">Google API Key</label>
       <input
         type="password"
         id="api-key-input"
-        placeholder="Enter Google API Key"
+        placeholder="Enter your API key"
       />
       <button id="save-api-key">Save API Key</button>
       <div id="api-key-status" class="status"></div>
     </div>
 
-    <div id="popup-content"></div>
+    <!-- <div id="popup-content"></div> -->
 
     <script src="popup.js"></script>
   </body>
