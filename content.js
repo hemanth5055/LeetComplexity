@@ -3,126 +3,172 @@ console.log("Content Script Loaded.");
 const AnalyzeBtn = document.createElement("button");
 AnalyzeBtn.id = "analyze-btn";
 
-// Button styling
-AnalyzeBtn.style.width = "31px";
-AnalyzeBtn.style.height = "31px";
-AnalyzeBtn.style.backgroundColor = "#262626";
-AnalyzeBtn.style.border = "none";
-AnalyzeBtn.style.borderRadius = "4px";
-AnalyzeBtn.style.cursor = "pointer";
-AnalyzeBtn.style.marginLeft = "6px";
-AnalyzeBtn.style.display = "flex";
-AnalyzeBtn.style.alignItems = "center";
-AnalyzeBtn.style.justifyContent = "center";
-AnalyzeBtn.style.padding = "0";
-
-// Add icon image
-const iconImg = document.createElement("img");
-iconImg.src = chrome.runtime.getURL("curve.png"); 
-iconImg.style.width = "18px";
-iconImg.style.height = "18px";
-iconImg.style.pointerEvents = "none";
-
-AnalyzeBtn.appendChild(iconImg);
-
-// Insert into container
-const container = document.getElementById("ide-top-btns");
-if (container) {
-  container.appendChild(AnalyzeBtn);
-} else {
-  console.warn("ide-top-btns not found!");
-}
-
-// Click handler
-AnalyzeBtn.addEventListener("click", async () => {
-  console.log("🚀 Analyze button clicked!");
-  const code = await scrollAndExtractMonacoCode();
-  console.log(code);
+const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+Object.assign(AnalyzeBtn.style, {
+  width: "31px",
+  height: "31px",
+  backgroundColor: isDark ? "#262626" : "#e0e0e0",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+  marginLeft: "6px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "0",
 });
 
-/**
- * Extracts code from Monaco editor by scrolling and maintaining an ordered set of lines
- * @returns {Promise<string>} The complete code from the editor
- */
+const iconImg = document.createElement("img");
+iconImg.src = chrome.runtime.getURL("curve.png");
+iconImg.style.width = "18px";
+iconImg.style.height = "18px";
+AnalyzeBtn.appendChild(iconImg);
+
+const container = document.getElementById("ide-top-btns");
+container?.appendChild(AnalyzeBtn);
+
+AnalyzeBtn.addEventListener("click", async () => {
+  showPopUp();
+  const code = await scrollAndExtractMonacoCode();
+  console.log(code);
+
+  chrome.runtime.sendMessage(
+    { type: "ANALYZE_CODE", payload: code },
+    (response) => {
+      if (chrome.runtime.lastError) return;
+      updatePopupResult(response?.result);
+    }
+  );
+});
+
 async function scrollAndExtractMonacoCode() {
-  const scrollContainer = document.querySelector(".monaco-scrollable-element");
-  if (!scrollContainer) {
-    console.error("❌ Monaco scroll container not found!");
-    return "";
-  }
+  const scroll = document.querySelector(".monaco-scrollable-element");
+  if (!scroll) return "";
 
-  // Ordered set: Map with line position as key
-  const orderedLines = new Map();
-  let unchangedCount = 0;
-  let previousSize = 0;
+  const lines = new Map();
+  let unchanged = 0,
+    prevSize = 0;
+  scroll.scrollTop = 0;
+  await new Promise((res) => setTimeout(res, 200));
 
-  // Start from top
-  scrollContainer.scrollTop = 0;
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  for (let i = 0; i < 500; i++) {
+    const view = document.querySelector(".view-lines");
+    if (!view) break;
 
-  let iteration = 0;
-  const maxIterations = 500;
-
-  while (iteration < maxIterations) {
-    iteration++;
-
-    const viewLines = document.querySelector(".view-lines");
-    if (!viewLines) break;
-
-    // Get all visible line divs
-    const lineDivs = viewLines.querySelectorAll('div.view-line[style*="top:"]');
-
-    // Add lines to ordered set
-    lineDivs.forEach((lineDiv) => {
-      const topValue = parseInt(lineDiv.style.top);
-      if (isNaN(topValue)) return;
-
-      // Skip if we already have this line position
-      if (orderedLines.has(topValue)) return;
-
-      // Extract text from the outer span only (avoids nested duplicates)
-      const outerSpan = lineDiv.querySelector("span");
-      if (!outerSpan) return;
-
-      const lineText = outerSpan.textContent || "";
-
-      // Add to ordered set
-      orderedLines.set(topValue, lineText);
+    view.querySelectorAll('div.view-line[style*="top:"]').forEach((div) => {
+      const top = parseInt(div.style.top);
+      if (!isNaN(top) && !lines.has(top))
+        lines.set(top, div.querySelector("span")?.textContent || "");
     });
 
-    const currentSize = orderedLines.size;
-    // console.log(`Iteration ${iteration}: ${currentSize} lines`);
+    if (lines.size === prevSize) {
+      if (++unchanged >= 3) break;
+    } else unchanged = 0;
 
-    // Check if we found new lines
-    if (currentSize === previousSize) {
-      unchangedCount++;
-      if (unchangedCount >= 3) break;
-    } else {
-      unchangedCount = 0;
-      previousSize = currentSize;
-    }
+    prevSize = lines.size;
+    const end =
+      scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 5;
+    if (end && unchanged >= 2) break;
 
-    // Check if at bottom
-    const isAtBottom =
-      scrollContainer.scrollTop + scrollContainer.clientHeight >=
-      scrollContainer.scrollHeight - 5;
-    if (isAtBottom && unchangedCount >= 2) break;
-
-    // Scroll down
-    scrollContainer.scrollTop += Math.floor(scrollContainer.clientHeight * 0.6);
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    scroll.scrollTop += Math.floor(scroll.clientHeight * 0.6);
+    await new Promise((res) => setTimeout(res, 100));
   }
 
-  // Sort by position and extract text
-  const sortedLines = Array.from(orderedLines.entries())
+  scroll.scrollTop = 0;
+  return [...lines.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([_, text]) => text);
+    .map((e) => e[1])
+    .join("\n");
+}
 
-  const finalCode = sortedLines.join("\n");
-  //   console.log(`✅ Extracted ${sortedLines.length} lines`);
+function showPopUp() {
+  if (document.getElementById("my-popup-container")) return;
+  const popup = document.createElement("div");
+  popup.id = "my-popup-container";
 
-  // Reset scroll
-  scrollContainer.scrollTop = 0;
+  Object.assign(popup.style, {
+    position: "fixed",
+    right: "30px",
+    bottom: "20px",
+    width: "300px",
+    height: "100px",
+    backgroundColor: isDark ? "#393939ff" : "#f2f2f2",
+    color: isDark ? "#fff" : "#000",
+    borderRadius: "12px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+    zIndex: "999999",
+    padding: "16px",
+  });
 
-  return finalCode;
+  const closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "&times;";
+  Object.assign(closeBtn.style, {
+    position: "absolute",
+    top: "8px",
+    right: "12px",
+    fontSize: "22px",
+    background: "none",
+    border: "none",
+    color: "inherit",
+    cursor: "pointer",
+  });
+  closeBtn.addEventListener("click", () => popup.remove());
+
+  const content = document.createElement("div");
+  content.id = "popup-content";
+  content.innerHTML = "<h3>Analyzing...</h3>";
+  content.style.marginTop = "20px";
+
+  popup.append(closeBtn, content);
+  document.body.appendChild(popup);
+}
+
+function updatePopupResult(result) {
+  console.log(result);
+  const content = document.getElementById("popup-content");
+
+  if (!content) {
+    console.error("popup-content element not found");
+    return;
+  }
+
+  try {
+    // Handle no result
+    if (!result) {
+      content.innerHTML = "<p>❌ Failed to analyze code</p>";
+      return;
+    }
+
+    // Handle API errors
+    if (result.error) {
+      content.innerHTML = `
+        <p>❌ Error: ${result.error}</p>
+        ${
+          result.details
+            ? `<p style="font-size: 12px; color: #666;">${result.details}</p>`
+            : ""
+        }
+      `;
+      return;
+    }
+
+    // Handle missing data
+    if (!result.timeComplexity && !result.spaceComplexity) {
+      content.innerHTML = "<p>❌ No complexity data available</p>";
+      return;
+    }
+
+    // Success case
+    content.innerHTML = `
+      <p><strong>Time Complexity:</strong> ${
+        result.timeComplexity || "Unknown"
+      }</p>
+      <p><strong>Space Complexity:</strong> ${
+        result.spaceComplexity || "Unknown"
+      }</p>
+    `;
+  } catch (err) {
+    console.error("Error updating popup:", err);
+    content.innerHTML = `<p>❌ Unexpected error: ${err.message}</p>`;
+  }
 }

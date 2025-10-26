@@ -14,9 +14,12 @@
       "js": ["content.js"]
     }
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "web_accessible_resources": [
     {
-      "resources": ["curve.png"],
+      "resources": ["curve.png", "popup.js"],
       "matches": ["<all_urls>"]
     }
   ]

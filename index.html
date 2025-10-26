@@ -3,9 +3,72 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>LeetCode TC</title>
+    <style>
+      body {
+        width: 300px;
+        padding: 16px;
+        font-family: Arial, sans-serif;
+      }
+      h3 {
+        margin: 0 0 12px 0;
+      }
+      .api-key-section {
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #ddd;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      button {
+        width: 100%;
+        padding: 8px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      .status {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+      }
+      .success {
+        color: #4caf50;
+      }
+      .error {
+        color: #f44336;
+      }
+      #popup-content {
+        margin-top: 16px;
+      }
+    </style>
   </head>
   <body>
     <h3>LeetCode TC</h3>
+
+    <div class="api-key-section">
+      <input
+        type="password"
+        id="api-key-input"
+        placeholder="Enter Google API Key"
+      />
+      <button id="save-api-key">Save API Key</button>
+      <div id="api-key-status" class="status"></div>
+    </div>
+
+    <div id="popup-content"></div>
+
+    <script src="popup.js"></script>
   </body>
 </html>
