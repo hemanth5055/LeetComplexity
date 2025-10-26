@@ -1,5 +1,5 @@
 {
-  "name": "LeetCode TC",
+  "name": "LeetComplexity",
   "description": "A Chrome extension that analyzes TC ans SC of leetcode problems.",
   "version": "1.0",
   "manifest_version": 3,
