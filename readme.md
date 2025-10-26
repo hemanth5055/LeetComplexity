@@ -13,15 +13,14 @@ Follow these steps to load the extension in Chrome:
 3. Enable **Developer mode** (toggle in the top-right corner)
 4. Click **Load unpacked**
 5. Select the folder containing the extension files
-6. The LeetCode TC extension should now appear in your extensions list
+6. The LeetComplexity extension should now appear in your extensions list
 
 ---
 
 ## 🚀 How to Use
 
 ### Step 0: Add Your API Key
-
-![Step 0](screenshots/0.png)
+<img src="screenshots/0.png" alt="Step 0" width="500" style="border-radius:12px;" />
 
 1. Click on the **LeetComplexity** extension icon in your Chrome toolbar
 2. Enter your **Google Gemini API Key** in the input field
@@ -34,7 +33,8 @@ Follow these steps to load the extension in Chrome:
 
 ### Step 1: Open a LeetCode Problem
 
-![Step 1](screenshots/1.png)
+<img src="screenshots/1.png" alt="Step 0" width="600" style="border-radius:12px;" />
+
 
 1. Navigate to any LeetCode problem (e.g., `https://leetcode.com/problems/two-sum/`)
 2. Write or paste your solution in the code editor
@@ -48,7 +48,8 @@ Follow these steps to load the extension in Chrome:
 
 ### Step 2: Wait for Analysis
 
-![Step 2](screenshots/2.png)
+<img src="screenshots/2.png" alt="Step 0" width="600" style="border-radius:12px;" />
+
 
 1. A popup will appear in the bottom-right corner showing "Analyzing..."
 2. The extension extracts your code from the Monaco editor
@@ -59,7 +60,8 @@ Follow these steps to load the extension in Chrome:
 
 ### Step 3: View Results
 
-![Step 3](screenshots/3.png)
+<img src="screenshots/3.png" alt="Step 0" width="600" style="border-radius:12px;" />
+
 
 1. The popup updates with the analysis results
 2. **Time Complexity** is displayed (e.g., O(n), O(n²), O(log n))
