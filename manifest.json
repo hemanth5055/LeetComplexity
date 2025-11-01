@@ -25,7 +25,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["curve.png", "popup.js"],
+      "resources": ["curve.png", "popup.js", "resources/tags.json"],
       "matches": ["<all_urls>"]
     }
   ]

@@ -57,6 +57,55 @@ iconImg.style.height = "18px";
 AnalyzeBtn.appendChild(iconImg);
 
 const container = document.getElementById("ide-top-btns");
+const descriptionContainer = document.querySelector(".elfjS");
+const titleElement = document.querySelector('a[href*="/problems/"]');
+
+if (titleElement && descriptionContainer) {
+  const parts = titleElement.href.split("/").filter(Boolean);
+  const title = parts.at(-1);
+
+  fetch(chrome.runtime.getURL("resources/tags.json"))
+    .then((res) => res.json())
+    .then((data) => {
+      let companies = [];
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].title === title) {
+          companies = data[i].companies;
+          break;
+        }
+      }
+
+      const companiesDiv = document.createElement("div");
+      companiesDiv.style.display = "flex";
+      companiesDiv.style.flexWrap = "wrap";
+      companiesDiv.style.gap = "8px";
+      companiesDiv.style.marginBottom = "1rem";
+
+      const isDark = document.documentElement.classList.contains("dark");
+
+      if (companies.length > 0) {
+        companies.forEach((c) => {
+          const cDiv = document.createElement("div");
+          cDiv.textContent = c;
+          cDiv.style.padding = "4px 10px";
+          cDiv.style.borderRadius = "15px";
+          cDiv.style.background = isDark ? "#383838ff" : "#e0e0e0";
+          cDiv.style.fontSize = "12px";
+          cDiv.style.fontFamily = "'Funnel Display', sans-serif";
+          cDiv.style.fontWeight = "350";
+          companiesDiv.appendChild(cDiv);
+        });
+      } else {
+        const noneDiv = document.createElement("div");
+        noneDiv.textContent = "No company data available";
+        companiesDiv.appendChild(noneDiv);
+      }
+
+      descriptionContainer.append(companiesDiv);
+    })
+    .catch((err) => console.error("Error loading tags.json:", err));
+}
+
 container?.appendChild(AnalyzeBtn);
 
 AnalyzeBtn.addEventListener("click", async () => {
