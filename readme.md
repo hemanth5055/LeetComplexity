@@ -69,6 +69,10 @@ Follow these steps to load the extension in Chrome:
 4. You can close the popup by clicking the **×** button
 
 ---
+### 🌍 Check Companies
+<img src="screenshots/companies.png" alt="Step 0" width="600" style="border-radius:12px;" />
+
+Scroll to the bottom of the description to view the companies that have asked this question.
 
 ## 🛠️ Features
 
